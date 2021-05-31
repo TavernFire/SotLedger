@@ -73,24 +73,24 @@ export default class CompanyLog
         const isMaxPosition = this.ledger.userBand.index === 0;
         if(state == "POSSIBLE_DEMOTE")
         {
-            return chalk.yellow(`Possible demote, ${this.formatNumber(this.ledger.pointsToDemote)}$ remaining`)
+            return chalk.yellow(`Possible demote, $${this.formatNumber(this.ledger.pointsToDemote)} remaining`)
         }
         else if(state == 'CLOSE_DEMOTE')
         {
-            return chalk.red(`Close to demote, ${this.formatNumber(this.ledger.pointsToDemote)}$ remaining`)
+            return chalk.red(`Close to demote, $${this.formatNumber(this.ledger.pointsToDemote)} remaining`)
         }
         else if(state == 'SAFE')
         {
-            return chalk.green(`Safe Max Position (${this.formatNumber(this.ledger.pointsToDemote)}$ above)`)
+            return chalk.green(`Safe Max Position ($${this.formatNumber(this.ledger.pointsToDemote)} above)`)
         }
         else
         {
-            return chalk.red(`Low rank, Next rank in: ${this.formatNumber(this.ledger.pointsToPromote)}$`);
+            return chalk.red(`Low rank, Needed for top 25%: $${this.formatNumber(this.ledger.pointsToPromote)}`);
         }
     }
 
     private formatNumber(number: number): string
     {
-        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
     }
 }

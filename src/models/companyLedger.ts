@@ -15,7 +15,6 @@ export class CompanyLedger
         public userGlobalRank: number,
         public userBandId: Number,
         public userBand: CompanyBand,
-        public userTag: string,
         public pointsToPromote: number,
         public pointsToDemote: number,
         public bands: CompanyBand[],

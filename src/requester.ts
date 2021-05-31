@@ -1,3 +1,4 @@
+import { resolveTxt } from 'dns';
 import fetch from 'node-fetch';
 import { companies } from './companies';
 import { CompanyLedger, CompanyBand, BandPrize, BandUser } from './models/companyLedger';
@@ -10,22 +11,34 @@ export default class Requester
             this.fetchCompany(company.url, ratToken)
                 .then((result: any) =>
                 {
-                    const resultUserBand = result.Bands[result.user.band];
-                    const companyBands = this.convertBands(result.Bands, result.user.band, company.tiers)
-                    resolve(new CompanyLedger(
-                        company.name,
-                        company.color,
-                        company.tiers.reverse(),
-                        result.user.rank,
-                        result.user.band,
-                        companyBands[result.user.band],
-                        result.Bands[result.user.band].Results[1],
-                        result.user.toNextRank,
-                        resultUserBand.Results[1].Score - resultUserBand.Results[2].Score,
-                        companyBands
-                    ));
+                    //console.dir(result,  { depth: null });
+                    var current = result.current.global;
+                    try {
+                        var user = current.user ?? {
+                            band: 3,
+                            toNextRank: 0,
+                            rank: -1,
+                            score: 0
+                        };
+                        var topband = current.Bands[0];
+                        const resultUserBand = current.Bands[user.band];
+                        const companyBands = this.convertBands(current.Bands, user.band, company.tiers)
+                        resolve(new CompanyLedger(
+                            company.name,
+                            company.color,
+                            company.tiers.reverse(),
+                            user.rank,
+                            user.band,
+                            companyBands[user.band],
+                            topband.Results[topband.Results.length - 1].Score - user.score,
+                            user.score - (resultUserBand.Results[resultUserBand.Results.length - 1].Score),
+                            companyBands
+                        ));
+                    } catch (e) {
+                        throw [e, result];
+                    }
                 })
-                .catch(reject));
+                .catch(error => console.log(error)));
     }
 
     private fetchCompany(url: string, ratToken: string)
@@ -37,7 +50,13 @@ export default class Requester
                     "Referer": "https://www.seaofthieves.com/leaderboards",
                     "User-Agent": 'SotLedger'
                 }})
-                .then(res => res.json()) 
+                .then(res => {
+                    try {
+                        return res.json();
+                    } catch(e) {
+                        reject([e, res.text()]);
+                    }
+                }) 
                 .then(json => resolve(json))
                 .catch(error => reject(error)));
     }
@@ -82,7 +101,7 @@ export default class Requester
                     companyTiers.reverse()[band.Index],
                     containsRequestingUser,
                     this.convertBandUser(band.Results[0]),
-                    this.convertBandUser(band.Results[containsRequestingUser ? 2 : 1]),
+                    this.convertBandUser(band.Results[band.Results - 1]),
                     this.convertBandPrize(band.TitleEntitlement),
                     this.convertBandPrize(band.Entitlements),
                 )
